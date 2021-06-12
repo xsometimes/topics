@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写Vue nextTick方法</title>
+</head>
+<body>
+  <script>
+    let timeFunc;
+    let pending = false;
+    const callbacks = [];
+
+    /**
+     * nextTick既可作为传 回调函数 的普通函数
+     * 又可是一个promise
+    */
+    function nextTick(cb, context = window) {
+
+      let _resolve
+      callbacks.push(() => {
+        if (cb) {
+          invokeCallback(cb, context)
+        } else if (_resolve) {
+          _resolve(context)
+        }
+      })
+      
+      if (!pending) {
+        pending = true
+        timeFunc()
+      }
+
+      if (!cb && typeof Promise !== 'undefined') {
+        return new Promise(resolve => {
+          _resolve = resolve
+        })
+      }
+    }
+
+    /**
+     * 优先级：Promise > MutationObserver > setImmediate > setTimeout
+    */
+    function setTimeFunc () {
+      if (typeof Promise !== 'undefined') {
+        const p = Promise.resolve()
+        timeFunc = () => {
+          p.then(flushCallbacks)
+        }
+      } else if (typeof MutationObserver !== 'undefined') {
+        let number = 1
+        const observer = new MutationObserver(flushCallbacks)
+        const textNode = document.createTextNode(String(number))
+        observer.observe(textNode, {
+          characterData: true
+        })
+        timeFunc = () => {
+          number = (number + 1) % 2
+          textNode.data = number
+        }
+      } else if (typeof setImmediate !== 'undefined') {
+        timeFunc = () => {
+          setImmediate(flushCallbacks)
+        }
+      } else {
+        timeFunc = () => {
+          setTimeout(flushCallbacks, 0)
+        }
+      }
+    }
+
+    function invokeCallback (callback, context) {
+      try {
+        callback.call(context)
+      } catch {
+        console.log('invoke nextTick callback error')
+      }
+    }
+
+    function flushCallbacks(params) {
+      pending = false;
+      const cbs = callbacks.slice();
+      callbacks.length = 0; // 和设置空数组的区别是，这种写法，callbacks还是指向初始化时内存地址
+      for (let i = 0; i < cbs.length; i++) {
+        cbs[i]();
+      }
+    }
+
+    setTimeFunc();
+
+
+
+    nextTick(() => {
+      console.log('nextTick callback')
+    })
+    nextTick().then(() => {
+      console.log('nextTick promise')
+    })
+
+
+  </script>
+</body>
+</html>

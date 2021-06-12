@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写图片懒加载-使用代理模式</title>
+</head>
+<body>
+  <script>
+    const loadingSrc = 'https://www.imooc.com/static/img/index/logo2020.png'
+    const imgSrc = 'https://img1.sycdn.imooc.com/5c09123400014ba418720632.jpg'
+
+    const myImage = (function (params) {
+      const imgNode = document.createElement('img');
+      document.body.appendChild(imgNode);
+      return {
+        setSrc: function (src) {
+          imgNode.src = src;
+        }
+      }
+    })();
+
+    // 创建代理对象
+    const proxyImage = (function (params) {
+      const img = new Image()
+      img.onload = function () {
+        myImage.setSrc(img.src);
+      }
+      return {
+
+        // 代理设置地址
+        setSrc: function (src) {
+          myImage.setSrc(loadingSrc);
+          img.src = src
+        }
+      }
+    })()
+
+
+    proxyImage.setSrc(imgSrc);
+
+
+
+
+
+
+
+
+
+
+
+    /** 代理模式的定义：代理模式给某一个对象提供一个代理对象，并由代理对象控制对原对象的引用。
+     * 通俗的来讲代理模式就是我们生活中常见的中介。
+     * 
+     * 为什么要用代理模式？
+     * 1）中介隔离作用：在某些情况下，一个客户类不想或者不能直接引用一个委托对象，而代理类对象可以在客户类和委托对象之间起到中介的作用，其特征是代理类和委托类实现相同的接口。
+     * 2）开闭原则，增加功能
+    */
+  </script>
+</body>
+</html>

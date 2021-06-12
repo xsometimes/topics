@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写数组reduce方法</title>
+</head>
+<body>
+  <script>
+
+    Array.prototype.myReduce = function (callback, initialValue) {
+      
+      let res;
+      const array = Object(this);
+      const len = array.length;
+      let index = 0;
+
+      // 设置res初始值
+      if (arguments.length > 1) {
+        res = initialValue
+      } else {
+
+        // example: [,,,,5]
+        while (index < len && !(index in array)) {
+          index++
+        }
+
+        if (index >= len) {
+          throw new TypeError('Reduce of empty array with no initial value')
+        }
+
+        res = array[index++]
+      }
+
+      while (index < len) {
+        if (index in array) {
+          res = callback(res, array[index], index, array);
+        }
+        
+        index++;
+      }
+
+      return res
+
+    }
+
+    const arr = [1,2,3,4,5];
+    const sum = arr.myReduce((prev, cur, index, arr) => {
+      return prev + cur
+    })
+
+    console.log(sum, arr)
+  </script>
+</body>
+</html>

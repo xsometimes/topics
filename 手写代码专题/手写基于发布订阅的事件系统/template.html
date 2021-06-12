@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写基于发布/订阅的事件系统</title>
+</head>
+<body>
+  <script>
+    
+    class eventEmitter {
+      constructor () {
+        this.handlers = {};
+      }
+
+      on (eventType, handler) {
+        if (!this.handlers.hasOwnproperty(eventType)) {
+          this.handlers[eventType] = [];
+        }
+        this.handlers[eventType].push(handler);
+
+        return this;
+      }
+
+      off (eventType, handler) {
+        if (!arguments.length) {
+          this.handlers = null;
+          return
+        }
+
+        if (Array.isArray(handler)) {
+          for (let i = 0; i < handler.length; i++) {
+            this.off(eventType, handler[i])
+          }
+          return 
+        }
+
+        const cbs = this.handlers[eventType]
+        if (!cbs || !cbs.length) {
+          return 
+        }
+
+        let cb;
+        let i = cbs.length
+        while(i--) {
+          if (cbs[i] === handler) {
+            cbs.splice(i, 1);
+            break
+          }
+        }
+      }
+
+      emit (eventType) {
+        const cbs = this.handlers[eventType];
+        if (cbs && !!cbs.length) {
+          const args = [...arguments].slice(1)
+          for (let i = 0, len = cbs.length; i < len; i++) {
+            invokeCallback(cbs[i], this, args);
+          }
+        }
+      }
+
+      once (eventType, handler) {
+        const on = () => {
+          this.off(eventType, on);
+          handler.apply(this, arguments)
+        }
+
+        this.on(eventType, on)
+      }
+    }
+
+    // 函数调用
+    function invokeCallback (cb, context, args) {
+      try {
+        cb && cb.apply(context, args);
+      } catch {
+        console.log('invoke cb error');
+      }
+    }
+  </script>
+</body>
+</html>

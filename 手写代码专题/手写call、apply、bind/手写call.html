@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写Call</title>
+</head>
+<body>
+  <script>
+
+    /**
+     * call的原理比较简单，我们要变更调用者，即完成this指向的变更，
+     * 即，只需执行 context.fn = this; return context.fn(...args);
+    */
+
+    Function.prototype.myCall = function (context = window) {
+      console.log('this：', this, context);
+      if (typeof this !== 'function') {
+        throw new TypeError('not a function');
+      }
+      const args = [...arguments].slice(1);
+      const symbolFn = Symbol('fn');
+      context[symbolFn] = this; // this指向调用call的对象，即我们要改变this指向的函数
+      const res = context[symbolFn](...args); // 执行当前函数
+      delete context[symbolFn]; // 删除我们声明的Symbol属性
+      return res; // 返回函数执行结果
+    }
+
+    
+    const obj = {
+      name: 'obj'
+    }
+    function foo(first, second) {
+      console.log('function name：', this.name);
+    }
+    foo.myCall(obj, 1, 2)
+  </script>
+</body>
+</html>

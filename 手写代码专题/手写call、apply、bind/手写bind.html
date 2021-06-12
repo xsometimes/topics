@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写bind</title>
+</head>
+<body>
+  <script>
+    /**
+     * 与call、apply不同的是，bind不会立即调用，其他两个会立即调用
+    */
+
+    Function.prototype.myBind = function (context) {
+      if (typeof this !== 'function') {
+        throw new TypeError('not a function')
+      }
+      const args = [...arguments].slice(1);
+      context = context || window;
+      const self = this;
+      
+      return function F() {
+        
+        // 考虑new操作符的情况
+        if (this instanceof F) { 
+          console.log('new情形:', this, F)
+          return self.apply(this, args.concat([...arguments]))
+        }
+
+        return self.apply(context, args.concat([...arguments]))
+      }
+    }
+
+    const obj = {
+      name: 'obj',
+      sex: 'female'
+    };
+    function foo (firstName, lastName) {
+      this.firstName = firstName
+      this.lastName = lastName
+      console.log('name：', this, this.name)
+    }
+
+    // 第一种情况
+    const bindFunc = foo.myBind(obj, 'AAA', 'BBB');
+    // bindFunc('CCC');
+
+    // 第二种情况
+    const instance = new bindFunc('DDD');
+    console.log('instance：',  instance);
+
+
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写图片懒加载-不使用代理模式</title>
+</head>
+<body>
+  <script>
+
+    const loadingSrc = 'https://www.imooc.com/static/img/index/logo2020.png'
+    const imgSrc = 'https://img1.sycdn.imooc.com/5c09123400014ba418720632.jpg'
+    const myImage = (function () {
+      const imgNode = document.createElement('img');
+      document.body.appendChild(imgNode);
+
+
+      const img = new Image();
+      img.onload = function () { // 图片下载完毕时异步调用callback函数
+        imgNode.src = img.src
+      }
+
+
+      return {
+        setSrc: function (src) {
+          // 步骤一，imgeNode默认src显示loading
+          // 步骤二，img设置src，待onload图片下载完毕后，调用回调函数，将src值传给imgNode
+          imgNode.src = loadingSrc;
+          img.src = src;
+        }
+      }
+    })()
+
+    myImage.setSrc(imgSrc)
+
+
+    // 实现懒加载的关键就是，在图片没有进入可视区域时，先不给img标签的src赋值，这样浏览器就不会发送请求了，到图片可视区域再给src赋值。
+    // 判断图片是否出现在视窗的函数
+    // function isShow($node){
+    //   return $node.offset().top <= $(window).height()+$(window).scrollTop();
+    // }
+
+  </script>
+</body>
+</html>

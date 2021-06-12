@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写简易深拷贝deepClone方法</title>
+</head>
+<body>
+  <script src="../../assets/utils.js"></script>
+  <script>
+
+    function deepClone(obj) {
+
+      const type = Object.prototype.toString.call(obj);
+      
+      let newObj;
+
+      switch (type) {
+        case '[object Object]':
+          newObj = {}
+          break;
+        case '[object Array]':
+          newObj = []
+          break;
+        case '[object Date]':
+          // 兼容Date
+          return new Date(obj);
+        case '[object RegExp]':
+          return new RegExp(obj);
+        default:
+          return obj;
+      }
+
+      Reflect.ownKeys(obj).forEach(key => {
+        newObj[key] = deepClone(obj[key]);
+      })
+
+      return newObj;
+
+    }
+
+    const obj = {
+      id: Symbol('id'),
+      name: 'AAA',
+      age: 23,
+      undef: undefined,
+      nul: null,
+      colors: ['red'],
+      job: {
+        name: 'FE',
+        salary: 200
+      },
+      date: new Date(0),
+      reg: new RegExp(),
+      [Symbol('id')]: 1,
+      sayName: function () {
+        console.log('this func')
+      }
+    };
+
+    // 不可枚举属性
+    Object.defineProperty(obj, 'nonEnumerable', {
+      enumerable: false,
+      value: '不可枚举属性'
+    })
+
+    const cloneObj = deepClone(obj);
+    console.log('origin desc', Object.getOwnPropertyDescriptor(obj, 'nonEnumerable'))
+    cloneObj.job.name = 'UI'
+    cloneObj.job.salary = 300
+    cloneObj.colors.push('green');
+    console.log('origin obj：', obj);
+    console.log('new obj：', cloneObj);
+  </script>
+</body>
+</html>

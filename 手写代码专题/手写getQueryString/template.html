@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写getQueryString</title>
+</head>
+<body>
+  <script>
+    /**
+     * 1. 不传参，返回所有
+     * 2. 传key参，获取指定value值
+     */
+    function getQueryString (url, name = '') {
+
+      const res = {}
+
+      // HTML Dom的search属性：设置或返回某个区域中 link-URL 的查询字符串部分
+      const dom = document.createElement('a');
+      dom.href = url;
+      const searchStr = dom.search.substr(1);
+      if (searchStr) {
+        const splitArr = searchStr.split('&');
+        for (let i = 0; i < splitArr.length; i++) {
+          const [key, value] = splitArr[i].split('=');
+          const newVal = decodeURIComponent(value);
+          res[key] = key in res ? 
+            (Array.isArray(res[key]) ? 
+              [value, ...res[key]] : [newVal, res[key]])
+            : newVal;
+        }
+      }
+      
+      return res[name]
+      
+    }
+
+
+    const url1 = 'https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&tn=baidu&wd=js%20getQueryString&fenlei=256&oq=js%25E5%25AD%2597%25E7%25AC%25A6%25E4%25B8%25B2%25E6%2588%25AA%25E5%258F%2596&rsv_pq=b32dae3b00009280&rsv_t=e057kWPkiCvBA2C6%2BEVlhZzny7XuhHHg25%2BI5GdJXfYnkwG8Zs5%2BxNpnqRI&rqlang=cn&rsv_dl=tb&rsv_enter=0&rsv_btype=t&inputT=1427&rsv_sug3=11&rsv_sug1=11&rsv_sug7=100&rsv_n=2&rsv_sug4=1608&rsv_sug=1';
+    const url2 = 'https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&ie=utf-81111'
+    console.log(`url1  rsv_bp：`, getQueryString(url1, 'rsv_bp'));
+    console.log(`url2  ie：`, getQueryString(url2, 'ie'));
+
+  </script>
+</body>
+</html>

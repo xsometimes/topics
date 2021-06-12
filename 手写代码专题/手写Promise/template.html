@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写Promise</title>
+</head>
+<body>
+  <script src="../../assets/utils.js"></script>
+  <script>
+    /**
+     * promise3种状态：pending、rejected、fulfilled
+     * 属性方法：链式.then()、静态方法.all()、静态方法.race()
+    */
+
+    const PENDING = 'pending',
+          RESOLVE = 'fulfilled',
+          REJECTED = 'rejected';
+
+
+    class MyPromise {
+
+      // 对executor的调用，可详见promiseInstance.then中的调用
+      constructor(executor) {
+        
+        this.state = PENDING;
+        this.value = undefined;
+        this.reason = undefined; // 存储失败的原因
+
+        // 存放成功和失败的两个数组，一旦reject或resolve，就调用它们
+        // 类似发布订阅，
+        this.resolvedCallbacks = []
+        this.rejectedCallbacks = []
+
+        // resolve、reject这两个函数：改变状态、根据状态执行回调，并将异步操作的结果传递出去
+        const resolve = value => {
+          if (value instanceof MyPromise) {
+            return value.then(resolve, reject)
+          }
+
+          nextTick (() => {
+            if (this.state === PENDING) {
+              this.state = RESOLVE
+              this.value = value
+              this.resolvedCallbacks.forEach(cb => cb(value))
+            }
+          })
+        }
+
+        const reject = reason => {
+          nextTick(() => {
+            if (this.state === PENDING) {
+              this.state === REJECTED
+              this.reason = reason
+              this.rejectedCallbacks.forEach(cb => cb(reason))
+            }
+          })
+        }
+
+        // executor为外部传递的，为了安全使用try-catch包裹
+        // 将resolve、reject两个函数传给executor，
+        try {
+          executor(resolve, reject);
+        } catch(err) {
+          reject(err);
+        }
+      }
+
+
+      static resolve(value) {
+
+        // 若value已经是一个promise实例，不用包裹，直接返
+        if (value instanceof MyPromise) {
+          return value
+        }
+
+        // 返回一个MyPromise实例，这个函数 接收两个参数函数resolve、reject
+        return new MyPromise((resolve, reject) => {
+          if (isObject(value) && isFunction(value.then)) {
+            value.then(resolve)
+          } else {
+            resolve(value)
+          }
+        })
+      }
+
+      static reject(error) {
+        return new MyPromise((resolve, reject) => {
+          reject(error);
+        }) 
+      }
+
+      static all(promiseArr) {
+        return new MyPromise((resolve, reject) => {
+          const res = []
+
+          //  若是空数组，直接返回
+          if (!promiseArr || !promiseArr.length) {
+            resolve(res)
+            return
+          }
+
+          for (let i = 0, len = promiseArr.length; i < len; i++) {
+            promiseArr[i].then(value => {
+              res.push(value)
+              if (res.length === len) {
+                resolve(res); // 所有promise都执行了，才resolve
+              }
+            },
+            error => reject(error))
+          }
+        })
+      }
+
+
+      static race(promiseArr) {
+        return new MyPromise((resolve, reject) => {
+          //  若是空数组，直接返回
+          if (!promiseArr || !promiseArr.length) {
+            resolve(res)
+            return
+          }
+
+          for (let i = 0, len = promiseArr.length; i < len; i++) {
+            promiseArr[i].then(
+              value => resolve(value),
+              error => reject(error)
+            )
+          }
+        })
+      }
+
+      then(onFulfilled, onRejected) {
+
+        onFulfilled = isFunction(onFulfilled) ? onFulfilled : v => v
+        onRejected = isFunction(onRejected) ? onRejected : e => { throw error }
+        
+        // 为了支持promise链式回调，需要在then中手动再包裹一层promise
+        return new MyPromise((resolve, reject) => {
+          
+          if (this.state === PENDING) {
+            this.rejectedCallbacks.push(() => {
+              try {
+                const res = onRejected(this.reason);
+                reject(res)
+              } catch(error) {
+                reject(error)
+              }
+            })
+
+            this.resolvedCallbacks.push(() => {
+              try {
+                const res = onFulfilled(this.value);
+                resolve(res)
+              } catch(error) {
+                reject(error)
+              }
+            })
+          }
+
+          if (this.state === REJECTED) {
+            nextTick(() => {
+              const res = onRejected(this.reason)
+              // 将res传给参数 reject函数
+              reject(res)
+            })
+          }
+
+          if (this.state === RESOLVE) {
+            nextTick(() => {
+              const res = onFulfilled(this.value);
+              // 将res传给参数 resolve函数
+              resolve(res)
+            })
+          }
+        })
+      }
+
+      catch(cb) {
+        // catch是一种特殊的then
+        return this.then(null, cb)
+      }
+
+      // 1.不管是then还是catch，都需要走finally回调
+      // 2.finally之后还可以继续then
+      finally(cb) {
+        return this.then(
+          value => MyPromise.resolve(cb()).then(() => value),
+          error => MyPromise.resolve(cb()).then(() => { throw error })
+        )
+      }
+      
+    }
+
+    function nextTick(fn) {
+      if (typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(fn);
+        let counter = 1;
+        const textNode = document.createTextNode(String(counter));
+        observer.observe(textNode, {
+          characterData: true
+        });
+        counter = (counter + 1) % 2;
+        textNode.data = counter;
+      } else {
+        setTimeout(fn, 0)
+      }
+    }
+
+
+
+
+    /**
+      * 1、promise是一个类
+      * new Promise((resolve, reject)=>{})，所以传入一个参数executor，传入就执行。executor中有两个参数，resolve，reject
+      * 
+      * 2、Promise存在三个状态：pending、fulfilled、rejected
+      * new Promise((resolve, reject)=>{resolve(value)}) resolve成功，接收参数value，状态改为fulflled
+      * new Promise((resolve, reject)=>{reject(error)}) reject失败，接收参数error，状态改为rejected
+      * 
+      * 3、then 链式
+      * 有两个参数，onFulfilled，onRejected，视状态分别执行对应函数
+      * 
+      * 
+      * 4、Promise构造函数是同步执行的，promise.then中的函数是异步执行的
+      * 
+      * 
+      * 
+      * 5、Promise的.then或者.catch可以被调用多次，但Promise构造函数只执行一次（，或者说Promise内部状态一经改变，并且有了一个值，那么后续每次调用.then或者.catch都会直接拿到该值）
+      */
+
+
+
+
+
+
+      MyPromise.resolve().then(() => {
+        console.log(0);
+        return MyPromise.resolve(4);
+      }).then((res) => {
+        console.log(res)
+      })
+  </script>
+</body>
+</html>
