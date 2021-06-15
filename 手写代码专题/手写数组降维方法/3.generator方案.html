@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>generator方式实现flat方法</title>
+</head>
+<body>
+  <script>
+
+    function* myFlat(arr = [], depth = 1) {
+
+      for (const item of arr) {
+        if (Array.isArray(item) && depth > 0) {
+          yield* myFlat(item, depth - 1); // yield*表达式，用来在一个 Generator 函数里面执行另一个 Generator 函数，完成遍历
+        } else {
+          yield item;
+        }
+      }
+      
+    }
+
+    
+
+    const arr = [1, 2, 3,[5, 6, 7, 8, 9, [null, undefined, , , 'today 666.', [10, 11, 12]]]]
+    const myResult1 = [...myFlat(arr, 1)]
+    const myResult2 = [...myFlat(arr, Infinity)]
+    const myResult3 = [...myFlat(arr, 2)]
+    console.log(myResult1)      
+    console.log(myResult2)    
+    console.log(myResult3)
+  </script>
+</body>
+</html>

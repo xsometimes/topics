@@ -12,16 +12,48 @@
     /**
      * 第一种：Set去重
     */
-
+    const arr1 = [1, 1, 2, 3, 3, 3, 6, 6 , 8, 8 ,9,,, undefined, null];
+    const uniqueArr1 = Array.from(new Set(arr1));
+    console.log('arr1去重bySet:', uniqueArr1)
 
     /**
      * 第二种：标记去重
     */
+   function duplicate(arr) {
+      const res = [];
+      const map = {};
+      for (let i = 0, len = arr.length; i < len ; i++) {
+        const target = arr[i];
+        if (!map[target]) {
+          res.push(target);
+          map[target] = true;
+        }
+      }
+      console.log('map:', map)
+      return res;
+   }
+
+   const uniqueArr2 = duplicate(arr1);
+   console.log('arr1去重by标记去重:', uniqueArr2)
 
     /**
      * 第三种：reduce去重
     */
+   function duplicate2(arr) {
+    
+     const res = arr.reduce((prev, cur, index, arr) => {
+       console.log('cur:', cur);// 用逗号形式隔开的 （没有传值的），reduce忽略，不视为undefined
+      if (prev.indexOf(cur) === -1) {
+        prev.push(cur)
+      }
 
+      return prev;
+
+     }, [])
+     return res;
+   }
+   const uniqueArr3 = duplicate2(arr1);
+   console.log('arr1去重by reduce:', uniqueArr3)
 
   </script>
 </body>

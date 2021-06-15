@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reduce+递归方案</title>
+</head>
+<body>
+  <script>
+
+    // MDN: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+    /**
+     * depth指定要提取嵌套数组的结构深度，默认为1；
+    */
+    Array.prototype.myFlat = function (depth = 1) {
+      const arr = this;
+
+      let res = [];
+      
+      if (depth === 0) { // 关键代码1，此处通过depth为0结束继续递归
+        return arr;
+      }
+
+      if (~arr.length) {
+
+        res = arr.reduce((prev, cur, curIndex, array) => {
+          if (Array.isArray(cur)) {
+            prev = prev.concat(cur); // 浅拷贝，array.concat(val);val类型为数组或值，
+          } else {
+            prev.push(cur);
+          }
+          return prev
+        }, [])
+      }
+
+      const flag = res.some(item => Array.isArray(item));
+
+      // 关键代码2：res.myFlat(depth - 1)
+      return flag ? res.myFlat(depth - 1) : res;
+    }
+
+    const arr = [1, 2, 3, [1, 2, 3, 4, [2, 3, 4, [5, 6, 7, 8]]]]
+    const myResult1 = arr.myFlat(1)
+    const myResult2 = arr.myFlat(Infinity)
+    const myResult3 = arr.myFlat(2)
+    console.log(myResult1)      // [1, 2, 3, 1, 2, 3, 4, [2, 3, 4]]
+    console.log(myResult2)     // [1, 2, 3, 1, 2, 3, 4, 2, 3, 4]
+    console.log(myResult3)
+
+
+  </script>
+</body>
+</html>

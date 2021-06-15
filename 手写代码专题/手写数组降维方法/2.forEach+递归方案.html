@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>forEach+递归实现flat方法</title>
+</head>
+<body>
+  <script>
+
+    Array.prototype.myFlat = function name(depth = 1) {
+      const arr = this;
+
+      if (depth === 0) {
+        return arr;
+      }
+
+      let res = [];
+
+      if (~arr.length) {
+        arr.forEach(item => {
+          if (Array.isArray(item)) {
+            res = res.concat(item)
+          } else {
+            res.push(item)
+          }
+        })
+      }
+
+      const flag = res.some(item => Array.isArray(item));
+      return flag ? res.myFlat(depth - 1) : res;
+    }
+
+    const arr = [1, 2, 3,[5, 6, 7, 8, 9, [null, undefined, , ,[10, 11, 12]]]]
+    const myResult1 = arr.myFlat(1)
+    const myResult2 = arr.myFlat(Infinity)
+    const myResult3 = arr.myFlat(2)
+    console.log(myResult1)      
+    console.log(myResult2)    
+    console.log(myResult3)
+  </script>
+</body>
+</html>
